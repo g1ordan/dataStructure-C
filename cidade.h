@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TAMANHO_TABELA_HASH 6000
+#define TAMANHO_TABELA_HASH 10000
 #define TAMANHO_MAX_STRING 256
 
 // Struct Cidade 

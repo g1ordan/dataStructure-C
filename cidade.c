@@ -1,13 +1,13 @@
 #include "cidade.h"
 
-#define TAMANHO_TABELA_HASH 6000
+#define TAMANHO_TABELA_HASH 10000
 #define TAMANHO_MAX_STRING 256
 
 
 // Função para criar uma nova tabela hash
 CidadeHashTable* criaHashTable() {
     // Aloca memória para a tabela hash
-    CidadeHashTable* hashTable = (CidadeHashTable*)malloc(sizeof(CidadeHashTable));
+    CidadeHashTable* hashTable = (CidadeHashTable*)calloc(1, sizeof(CidadeHashTable));
     if (hashTable != NULL) {
         // Inicializa cada posição da tabela com NULL
         int i;
@@ -18,32 +18,57 @@ CidadeHashTable* criaHashTable() {
     return hashTable;
 }
 
-// Função para calcular o valor hash de uma chave (nome da cidade)
+//// Função para calcular o valor hash de uma chave (nome da cidade)
 unsigned int calculaHash(const char* chave) {
     unsigned int hash = 0;
-    while (*chave) {
-        // Fórmula simples de hash, multiplicação e soma dos caracteres
-        hash = (hash * 31) + *chave;
-        chave++;
+    const unsigned char* p = (const unsigned char*)chave;
+    while (*p) {
+        hash = ((hash << 5) + hash) ^ *p++;
     }
     return hash % TAMANHO_TABELA_HASH;
 }
 
-// Função para inserir uma cidade na tabela hash
 void insereCidade(CidadeHashTable* hashTable, Cidade* cidade) {
-    // Calcula o valor hash da chave (nome da cidade)
-    unsigned int index = calculaHash(cidade->nomeMunic);
+    unsigned int indice = calculaHash(cidade->nomeMunic);
 
-    // Cria um novo nó de cidade
+    // Aloca um novo nó para a cidade a ser inserida
     CidadeNo* novoNo = (CidadeNo*)malloc(sizeof(CidadeNo));
+
+    // Verifica se a alocação foi bem-sucedida
     if (novoNo != NULL) {
         // Atribui a cidade ao novo nó
         novoNo->cidade = cidade;
-        // Insere o novo nó no início da lista encadeada correspondente ao valor hash
-        novoNo->prox = hashTable->tabela[index];
-        hashTable->tabela[index] = novoNo;
+        novoNo->prox = NULL;
+
+        // Verifica se a posição da tabela hash está vazia
+        if (hashTable->tabela[indice] == NULL) {
+            // Se estiver vazia, insere o novo nó diretamente na posição
+            hashTable->tabela[indice] = novoNo;
+        } else {
+            // Caso contrário, ocorreu uma colisão
+            printf("Colisão encontrada no índice %u:\n", indice);
+            
+
+            // Percorre a lista encadeada para imprimir as cidades colidentes
+            CidadeNo* atual = hashTable->tabela[indice];
+            
+            while (atual != NULL) {
+                printf("Cod. Município: %d, Município: %s, Estado: %s\n\n", atual->cidade->codMunic, atual->cidade->nomeMunic, atual->cidade->uf);
+                atual = atual->prox;
+            }
+            
+
+            // Insere o novo nó como próximo do último nó da lista
+            CidadeNo* ultimo = hashTable->tabela[indice];
+            while (ultimo->prox != NULL) {
+                ultimo = ultimo->prox;
+            }
+            ultimo->prox = novoNo;
+    
+        }
     }
 }
+
 
 // Função para criar uma nova cidade a partir dos dados fornecidos
 Cidade* criaCidade(const char* uf, const char* codUf, int codMunic, const char* nomeMunic, const char* populacao) {
@@ -60,7 +85,7 @@ Cidade* criaCidade(const char* uf, const char* codUf, int codMunic, const char* 
     return novaCidade;
 }
 
-// Função de comparação para o qsort, usado para ordenar as cidades
+ //Função de comparação para o qsort, usado para ordenar as cidades
 int compare(const void* a, const void* b) {
     const Cidade* cidadeA = (*(const Cidade**)a);
     const Cidade* cidadeB = (*(const Cidade**)b);
@@ -113,7 +138,7 @@ void lerCidades() {
     // Ordena o array de cidades usando a função qsort e a função de comparação
     qsort(cidadeArray, count, sizeof(Cidade*), compare);
 
-    // Imprime as cidades ordenadas
+//    // Imprime as cidades ordenadas
     int i;
     for (i = 0; i < count; i++) {
         printf("Codigo: %d, Estado: %s, Municipio: %s\n", cidadeArray[i]->codMunic, cidadeArray[i]->uf, cidadeArray[i]->nomeMunic);
@@ -127,32 +152,6 @@ void lerCidades() {
     // Libera a memória alocada para a tabela hash
     free(hashTable);
 }
-
-
-
-//void imprimeColisoes(CidadeHashTable *hashTable, unsigned int index) // Para imprimir colisÃµes e verificar se o valor do hash corresponde
-//{
-//    printf("COLISOES IDENTIFICADAS NO INDICE %u:\n", index);
-//
-//    CidadeNo *atual = hashTable->tabela[index];
-//
-//    while (atual != NULL)
-//    {
-//        Cidade *cidade = atual->cidade;
-//        unsigned int hash = calculaHash(cidade->nomeMunic);
-//
-//        if (hash == index)
-//        {
-//            printf("Municipio: %s, Estado: %s\n", cidade->nomeMunic, cidade->uf);
-//        }
-//        else
-//        {
-//            printf("Municipio com hash incorreto - indice esperado: %u, indice real: %u\n", index, hash);
-//        }
-//
-//        atual = atual->prox;
-//    }
-//}
 
 
 /*
