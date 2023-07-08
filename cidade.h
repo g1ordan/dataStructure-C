@@ -2,8 +2,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAX_STR_LEN 255     // limite de caracteres de cada linha do arquivo
-#define SIZE_HASH_TABLE 6000 // Define o 'size' da tabela hash
+#define TAMANHO_TABELA_HASH 6000
+#define TAMANHO_MAX_STRING 256
 
 // Struct Cidade 
 typedef struct dadosCidade
@@ -11,31 +11,28 @@ typedef struct dadosCidade
   char uf[3];
   char codUf[3];
   int codMunic;
-  char nomeMunic[33]; // 'Vila Bela da Santissima Trindade' eh a cidade brasileira com o maior nome, tem 32 caracteres contando os espacos.
-  char populacao[9];  // Sao Paulo tem 15 meloes de habitantes, sao 8 digitos
+  char nomeMunic[33]; 
+  char populacao[9];  
 } Cidade;
 
-// Estrutura para armazenar as cidades e seus índices
-typedef struct {
-    Cidade *cidade;
-    int index;
-} CidadeArrayItem;
-
-
-typedef struct
-{ 
-  Cidade *cidade;
-  struct cidadeNo *prox;
+// Definição da estrutura de um nó de cidade na tabela hash
+typedef struct CidadeNo {
+    Cidade* cidade;
+    struct CidadeNo* prox;
 } CidadeNo;
 
-typedef struct
-{ // Tabela Hash
-  CidadeNo *tabela[SIZE_HASH_TABLE];
+// Definição da estrutura da tabela hash
+typedef struct CidadeHashTable {
+    CidadeNo* tabela[TAMANHO_TABELA_HASH];
 } CidadeHashTable;
 
+
 // Definicoes das funcoes
-void LerCidades();
-int InsereCidade(Cidade *cid);
-void imprimeColisoes(CidadeHashTable *hashTable, unsigned int index);
-void salvarColisoes(CidadeHashTable *hashTable);
-Cidade *CriaCidade(char *uf, char *codUf, int codMunic, char *nomeMunic, char *populacao);
+CidadeHashTable* criaHashTable();
+unsigned int calculaHash(const char* chave);
+void insereCidade(CidadeHashTable* hashTable, Cidade* cidade);
+Cidade* criaCidade(const char* uf, const char* codUf, int codMunic, const char* nomeMunic, const char* populacao);
+int compare(const void* a, const void* b);
+void lerCidades();
+//void imprimeColisoes(CidadeHashTable *hashTable, unsigned int index);
+

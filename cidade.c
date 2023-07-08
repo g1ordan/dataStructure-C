@@ -1,211 +1,132 @@
 #include "cidade.h"
-#define SIZE_HASH_TABLE 6000 // Define o 'size' da tabela hash
 
-CidadeHashTable *criaHashTable() 
-{
-    CidadeHashTable *hashTable = (CidadeHashTable *)malloc(sizeof(CidadeHashTable));
-    int i;
-    for (i = 0; i < SIZE_HASH_TABLE; i++)
-    {
-        hashTable->tabela[i] = NULL;
+#define TAMANHO_TABELA_HASH 6000
+#define TAMANHO_MAX_STRING 256
+
+
+// Função para criar uma nova tabela hash
+CidadeHashTable* criaHashTable() {
+    // Aloca memória para a tabela hash
+    CidadeHashTable* hashTable = (CidadeHashTable*)malloc(sizeof(CidadeHashTable));
+    if (hashTable != NULL) {
+        // Inicializa cada posição da tabela com NULL
+        int i;
+        for (i = 0; i < TAMANHO_TABELA_HASH; i++) {
+            hashTable->tabela[i] = NULL;
+        }
     }
     return hashTable;
 }
 
-unsigned int calculaHash(char *chave) // Calcula o valor da hash, percorrendo cada caractere
-{
-    unsigned int hash = 5381; // Numero primo mais comum
-    int c;
-
-    while ((c = *chave++))
-    {
-        hash = ((hash << 5) + hash) + c;
+// Função para calcular o valor hash de uma chave (nome da cidade)
+unsigned int calculaHash(const char* chave) {
+    unsigned int hash = 0;
+    while (*chave) {
+        // Fórmula simples de hash, multiplicação e soma dos caracteres
+        hash = (hash * 31) + *chave;
+        chave++;
     }
-    return hash % SIZE_HASH_TABLE;
+    return hash % TAMANHO_TABELA_HASH;
 }
 
-void insereCidade(CidadeHashTable *hashTable, Cidade *cidade)
-{
+// Função para inserir uma cidade na tabela hash
+void insereCidade(CidadeHashTable* hashTable, Cidade* cidade) {
+    // Calcula o valor hash da chave (nome da cidade)
     unsigned int index = calculaHash(cidade->nomeMunic);
 
-    CidadeNo *novoNo = (CidadeNo *)malloc(sizeof(CidadeNo));
-    novoNo->cidade = cidade;
-    novoNo->prox = NULL;
-
-    if (hashTable->tabela[index] == NULL)
-    {
-        // Insere no inicio caso não haja no na posiçao da tabela hash
+    // Cria um novo nó de cidade
+    CidadeNo* novoNo = (CidadeNo*)malloc(sizeof(CidadeNo));
+    if (novoNo != NULL) {
+        // Atribui a cidade ao novo nó
+        novoNo->cidade = cidade;
+        // Insere o novo nó no início da lista encadeada correspondente ao valor hash
+        novoNo->prox = hashTable->tabela[index];
         hashTable->tabela[index] = novoNo;
-    }
-    else
-    {
-        // Percorre a lista e insere no final caso exista um no na posição da tabela hash
-        CidadeNo *atual = hashTable->tabela[index];
-        while (atual->prox != NULL)
-        {
-            atual = atual->prox;
-        }
-        atual->prox = novoNo;
     }
 }
 
-// Pega cada linha do csv e transforma em um objeto dentro da memoria, provando que C pode ser orietado a objetos
-Cidade *CriaCidade(char *uf, char *codUf, int codMunic, char *nomeMunic, char *populacao)
-{
-    Cidade *novaCidade = (Cidade *)malloc(sizeof(Cidade));
-    strcpy(novaCidade->uf, uf);
-    strcpy(novaCidade->codUf, codUf);
-    novaCidade->codMunic = codMunic;
-    strcpy(novaCidade->nomeMunic, nomeMunic);
-    strcpy(novaCidade->populacao, populacao);
+// Função para criar uma nova cidade a partir dos dados fornecidos
+Cidade* criaCidade(const char* uf, const char* codUf, int codMunic, const char* nomeMunic, const char* populacao) {
+    // Aloca memória para uma nova cidade
+    Cidade* novaCidade = (Cidade*)malloc(sizeof(Cidade));
+    if (novaCidade != NULL) {
+        // Copia as strings para os campos correspondentes da cidade
+        strcpy(novaCidade->uf, uf);
+        strcpy(novaCidade->codUf, codUf);
+        novaCidade->codMunic = codMunic;
+        strcpy(novaCidade->nomeMunic, nomeMunic);
+        strcpy(novaCidade->populacao, populacao);
+    }
     return novaCidade;
 }
 
-//void LerCidades()
-//{
-//    FILE *file = fopen("cidades.csv", "r");
-//    if (file == NULL)
-//    {
-//        printf("Erro ao abrir o arquivo!\n");
-//        return;
-//    }
-//
-//    CidadeHashTable *hashTable = criaHashTable();
-//
-//    char buf[SIZE_HASH_TABLE];
-//    char *tmp;
-//    int count = 0;
-//
-//    while (fgets(buf, MAX_STR_LEN, file) != NULL)
-//    {
-//        if ((strlen(buf) > 0) && (buf[strlen(buf) - 1] == '\n'))
-//        {
-//            buf[strlen(buf) - 1] = '\0';
-//        }
-//
-//        tmp = strtok(buf, ",");
-//        char uf[3];
-//        strcpy(uf, tmp);
-//
-//        tmp = strtok(NULL, ",");
-//        char codUf[3];
-//        strcpy(codUf, tmp);
-//
-//        tmp = strtok(NULL, ",");
-//        char codMunic[6];
-//        strcpy(codMunic, tmp);
-//
-//        tmp = strtok(NULL, ",");
-//        char nomeMunic[33];
-//        strcpy(nomeMunic, tmp);
-//
-//        tmp = strtok(NULL, ",");
-//        char populacao[9];
-//        strcpy(populacao, tmp);
-//
-//        if (count > 0) // Ignora a primeira linha do arquivo (cabecalho)
-//        {
-//            Cidade *novaCidade = CriaCidade(uf, codUf, codMunic, nomeMunic, populacao);
-//            insereCidade(hashTable, novaCidade);
-//        }
-//        count++;
-//    }
-//    fclose(file);
-//    // imprimeCidades(hashTable); Chamada da funcao para imprimir as cidades
-//
-//    int i;
-//    for (i = 0; i < SIZE_HASH_TABLE; i++)
-//    {
-//        if (hashTable->tabela[i] != NULL)
-//        {
-//            imprimeColisoes(hashTable, i);
-//            printf("\n");
-//        }
-//    }
-//}
-
- //Função de comparação para qsort
-int compare(const void *a, const void *b) {
-    CidadeArrayItem *cidadeA = (CidadeArrayItem *)a;
-    CidadeArrayItem *cidadeB = (CidadeArrayItem *)b;
-    
-    if(cidadeA->cidade->codMunic < cidadeB->cidade->codMunic)
-    return -1;
-    if(cidadeB->cidade->codMunic > cidadeA->cidade->codMunic)
-    return -1;
+// Função de comparação para o qsort, usado para ordenar as cidades
+int compare(const void* a, const void* b) {
+    const Cidade* cidadeA = (*(const Cidade**)a);
+    const Cidade* cidadeB = (*(const Cidade**)b);
+    return cidadeA->codMunic - cidadeB->codMunic;
 }
 
-
-void LerCidades() {
-    FILE *file = fopen("cidadesUTF-8.csv", "r");
+// Função para ler as cidades do arquivo CSV
+void lerCidades() {
+    FILE* file = fopen("cidadesUTF-8.csv", "r");
     if (file == NULL) {
-        printf("Erro ao abrir o arquivo!\n");
+        printf("Falha ao abrir o arquivo!\n");
         return;
     }
 
-    CidadeHashTable *hashTable = criaHashTable();
-
-    char buf[MAX_STR_LEN];
-    char *tmp;
+    // Cria uma nova tabela hash para armazenar as cidades
+    CidadeHashTable* hashTable = criaHashTable();
+    // Cria um array para armazenar as cidades e seus índices
+    Cidade** cidadeArray = NULL;
     int count = 0;
 
-    // Array para armazenar as cidades e seus índices
-    CidadeArrayItem cidadeArray[SIZE_HASH_TABLE];
+    char linha[TAMANHO_MAX_STRING];
+    fgets(linha, TAMANHO_MAX_STRING, file); // Ignora a primeira linha (cabeçalho)
 
-    while (fgets(buf, MAX_STR_LEN, file) != NULL) {
-        if ((strlen(buf) > 0) && (buf[strlen(buf) - 1] == '\n')) {
-            buf[strlen(buf) - 1] = '\0';
-        }
-
-        tmp = strtok(buf, ",");
-        char uf[3];
-        strcpy(uf, tmp);
-
-        tmp = strtok(NULL, ",");
-        char codUf[3];
-        strcpy(codUf, tmp);
-
-        tmp = strtok(NULL, ",");
+    while (fgets(linha, TAMANHO_MAX_STRING, file) != NULL) {
+        char uf[3], codUf[3], nomeMunic[33], populacao[9];
         int codMunic;
-        codMunic = atoi(tmp);
+        sscanf(linha, "%2s,%2s,%d,%32[^,],%8s", uf, codUf, &codMunic, nomeMunic, populacao);
 
-        tmp = strtok(NULL, ",");
-        char nomeMunic[33];
-        strcpy(nomeMunic, tmp);
-
-        tmp = strtok(NULL, ",");
-        char populacao[9];
-        strcpy(populacao, tmp);
-
-        if (count > 0) // Ignora a primeira linha do arquivo (cabeçalho)
-        {
-            Cidade *novaCidade = CriaCidade(uf, codUf, codMunic, nomeMunic, populacao);
+        // Cria uma nova cidade com os dados lidos do arquivo
+        Cidade* novaCidade = criaCidade(uf, codUf, codMunic, nomeMunic, populacao);
+        if (novaCidade != NULL) {
+            // Insere a cidade na tabela hash
             insereCidade(hashTable, novaCidade);
 
-            // Preenche o array de CidadeArray
-            cidadeArray[count - 1].cidade = novaCidade;
-            cidadeArray[count - 1].index = count - 1;
+            // Realoca o array de cidades para acomodar a nova cidade
+            cidadeArray = (Cidade**)realloc(cidadeArray, (count + 1) * sizeof(Cidade*));
+            if (cidadeArray != NULL) {
+                // Adiciona a nova cidade ao array
+                cidadeArray[count] = novaCidade;
+                count++;
+            } else {
+                // Em caso de falha na realocação do array, libera a memória da nova cidade e interrompe o loop
+                free(novaCidade);
+                break;
+            }
         }
-        count++;
     }
     fclose(file);
 
-    // Ordena o array de cidades usando a função qsort
-    qsort(cidadeArray, count - 1, sizeof(CidadeArrayItem), compare);
+    // Ordena o array de cidades usando a função qsort e a função de comparação
+    qsort(cidadeArray, count, sizeof(Cidade*), compare);
 
     // Imprime as cidades ordenadas
     int i;
-    for (i = 0; i < count - 1; i++) {
-        printf("Codigo: %d, Estado: %s, Municipio: %s,\n", cidadeArray[i].cidade->codMunic, cidadeArray[i].cidade->uf, cidadeArray[i].cidade->nomeMunic);
+    for (i = 0; i < count; i++) {
+        printf("Codigo: %d, Estado: %s, Municipio: %s\n", cidadeArray[i]->codMunic, cidadeArray[i]->uf, cidadeArray[i]->nomeMunic);
     }
 
-    // Liberar a memória alocada
-    for (i = 0; i < count - 1; i++) {
-        free(cidadeArray[i].cidade);
+    // Libera a memória alocada para as cidades e o array de cidades
+    for (i = 0; i < count; i++) {
+        free(cidadeArray[i]);
     }
+    free(cidadeArray);
+    // Libera a memória alocada para a tabela hash
     free(hashTable);
 }
-
 
 
 
@@ -233,12 +154,6 @@ void LerCidades() {
 //    }
 //}
 
-int InsereCidade(Cidade *cid)
-{
-    printf("\n %s %s %d %s %s", cid->uf, cid->codUf, cid->codMunic, cid->nomeMunic, cid->populacao);
-
-    return 1;
-}
 
 /*
 void imprimeCidades(CidadeHashTable *hashTable) { // Para imprimir as cidades com todos os dados
