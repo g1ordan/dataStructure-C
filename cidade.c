@@ -18,6 +18,7 @@ CidadeHashTable* criaHashTable() {
     return hashTable;
 }
 
+//O uso do tipo "unsigned int" é comum para garantir que o valor retornado seja sempre positivo.
 unsigned int calculaHash(int codMunic) {
     unsigned int hash = 0;
     unsigned int chave = (unsigned int)codMunic;
@@ -88,6 +89,8 @@ void dadosTabelaDispersa(CidadeHashTable* hashTable, int codMunic) {
 }
 
 //Função de comparação para o qsort, usado para ordenar as cidades
+/*Os parâmetros const void* a e const void* b são ponteiros genéricos (void*) para os elementos a serem comparados.
+ Eles são declarados como "const" para indicar que o conteúdo apontado por eles não será modificado pela função de comparação*/
 int compare(const void* a, const void* b) {
     const Cidade* cidadeA = (*(const Cidade**)a);
     const Cidade* cidadeB = (*(const Cidade**)b);
@@ -162,7 +165,7 @@ void lerCidades() {
     qsort(cidadeArray, count, sizeof(Cidade*), compare);
 
     int i;
-    printf("\nCidades ordenadas:\n");
+    printf("\nCidades ordenadas pelo código do Município:\n\n");
     for (i = 0; i < count; i++) {
         printf("Codigo: %d, Estado: %s, Municipio: %s\n", cidadeArray[i]->codMunic, cidadeArray[i]->uf, cidadeArray[i]->nomeMunic);
     }
@@ -180,7 +183,6 @@ void lerCidades() {
     // Libera a memória alocada para a tabela hash
     free(hashTable);
 }
-
 
 /*
 void imprimeCidades(CidadeHashTable *hashTable) { // Para imprimir as cidades com todos os dados

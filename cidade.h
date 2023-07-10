@@ -36,3 +36,4 @@ void dadosTabelaDispersa(CidadeHashTable* hashTable, int codMunic);
 int compare(const void* a, const void* b);
 void dadosBuscaBinaria(Cidade** cidadeArray, int count, int codMunic);
 void lerCidades();
+//void imprimeCidades(CidadeHashTable *hashTable);
