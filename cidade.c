@@ -6,10 +6,10 @@
 
 // Função para criar uma nova tabela hash
 CidadeHashTable* criaHashTable() {
-    // Aloca memória para a tabela hash
+    
     CidadeHashTable* hashTable = (CidadeHashTable*)calloc(1, sizeof(CidadeHashTable));
     if (hashTable != NULL) {
-        // Inicializa cada posição da tabela com NULL
+        
         int i;
         for (i = 0; i < TAMANHO_TABELA_HASH; i++) {
             hashTable->tabela[i] = NULL;
@@ -18,23 +18,23 @@ CidadeHashTable* criaHashTable() {
     return hashTable;
 }
 
-//// Função para calcular o valor hash de uma chave (nome da cidade)
-unsigned int calculaHash(const char* chave) {
+unsigned int calculaHash(int codMunic) {
     unsigned int hash = 0;
-    const unsigned char* p = (const unsigned char*)chave;
-    while (*p) {
-        hash = ((hash << 5) + hash) ^ *p++;
+    unsigned int chave = (unsigned int)codMunic;
+
+    while (chave) {
+        hash = ((hash << 5) + hash) ^ (chave & 0xFF);
+        chave >>= 8;
     }
+
     return hash % TAMANHO_TABELA_HASH;
 }
 
 void insereCidade(CidadeHashTable* hashTable, Cidade* cidade) {
-    unsigned int indice = calculaHash(cidade->nomeMunic);
+    unsigned int indice = calculaHash(cidade->codMunic);
 
-    // Aloca um novo nó para a cidade a ser inserida
     CidadeNo* novoNo = (CidadeNo*)malloc(sizeof(CidadeNo));
 
-    // Verifica se a alocação foi bem-sucedida
     if (novoNo != NULL) {
         // Atribui a cidade ao novo nó
         novoNo->cidade = cidade;
@@ -47,16 +47,6 @@ void insereCidade(CidadeHashTable* hashTable, Cidade* cidade) {
         } else {
             // Caso contrário, ocorreu uma colisão
             printf("Colisão encontrada no índice %u:\n", indice);
-            
-
-            // Percorre a lista encadeada para imprimir as cidades colidentes
-            CidadeNo* atual = hashTable->tabela[indice];
-            
-            while (atual != NULL) {
-                printf("Cod. Município: %d, Município: %s, Estado: %s\n\n", atual->cidade->codMunic, atual->cidade->nomeMunic, atual->cidade->uf);
-                atual = atual->prox;
-            }
-            
 
             // Insere o novo nó como próximo do último nó da lista
             CidadeNo* ultimo = hashTable->tabela[indice];
@@ -64,18 +54,14 @@ void insereCidade(CidadeHashTable* hashTable, Cidade* cidade) {
                 ultimo = ultimo->prox;
             }
             ultimo->prox = novoNo;
-    
         }
     }
 }
 
-
-// Função para criar uma nova cidade a partir dos dados fornecidos
 Cidade* criaCidade(const char* uf, const char* codUf, int codMunic, const char* nomeMunic, const char* populacao) {
-    // Aloca memória para uma nova cidade
+    
     Cidade* novaCidade = (Cidade*)malloc(sizeof(Cidade));
     if (novaCidade != NULL) {
-        // Copia as strings para os campos correspondentes da cidade
         strcpy(novaCidade->uf, uf);
         strcpy(novaCidade->codUf, codUf);
         novaCidade->codMunic = codMunic;
@@ -85,21 +71,56 @@ Cidade* criaCidade(const char* uf, const char* codUf, int codMunic, const char* 
     return novaCidade;
 }
 
- //Função de comparação para o qsort, usado para ordenar as cidades
+void dadosTabelaDispersa(CidadeHashTable* hashTable, int codMunic) {
+    unsigned int indice = calculaHash(codMunic);
+
+    CidadeNo* atual = hashTable->tabela[indice];
+    while (atual != NULL) {
+        if (atual->cidade->codMunic == codMunic) {
+            printf("\nDados encontrados através da tabela dispersa:\n");
+            printf("Cod. Município: %d, Município: %s, Estado: %s\n\n", atual->cidade->codMunic, atual->cidade->nomeMunic, atual->cidade->uf);
+            return; // Encontrou o resultado, encerra a função
+        }
+        atual = atual->prox;
+    }
+
+    printf("Falha ao acessar os dados.\n");
+}
+
+//Função de comparação para o qsort, usado para ordenar as cidades
 int compare(const void* a, const void* b) {
     const Cidade* cidadeA = (*(const Cidade**)a);
     const Cidade* cidadeB = (*(const Cidade**)b);
     return cidadeA->codMunic - cidadeB->codMunic;
 }
 
-// Função para ler as cidades do arquivo CSV
+void dadosBuscaBinaria(Cidade** cidadeArray, int count, int codMunic) {
+    int inicio = 0;
+    int fim = count - 1;
+
+    while (inicio <= fim) {
+        int meio = inicio + (fim - inicio) / 2;
+        int valorMeio = cidadeArray[meio]->codMunic;
+
+        if (valorMeio == codMunic) {
+            printf("Dados encontrados através da busca binária:\n");
+            printf("Cod. Município: %d, Município: %s, Estado: %s\n\n", cidadeArray[meio]->codMunic, cidadeArray[meio]->nomeMunic, cidadeArray[meio]->uf);
+            return;
+        } else if (valorMeio < codMunic) {
+            inicio = meio + 1;
+        } else {
+            fim = meio - 1;
+        }
+    }
+	printf("Falha ao acessar os dados.\n");
+}
+
 void lerCidades() {
     FILE* file = fopen("cidadesUTF-8.csv", "r");
     if (file == NULL) {
         printf("Falha ao abrir o arquivo!\n");
         return;
     }
-
     // Cria uma nova tabela hash para armazenar as cidades
     CidadeHashTable* hashTable = criaHashTable();
     // Cria um array para armazenar as cidades e seus índices
@@ -107,12 +128,12 @@ void lerCidades() {
     int count = 0;
 
     char linha[TAMANHO_MAX_STRING];
-    fgets(linha, TAMANHO_MAX_STRING, file); // Ignora a primeira linha (cabeçalho)
+    fgets(linha, TAMANHO_MAX_STRING, file); // Não acessa a primeira linha
 
     while (fgets(linha, TAMANHO_MAX_STRING, file) != NULL) {
         char uf[3], codUf[3], nomeMunic[33], populacao[9];
         int codMunic;
-        sscanf(linha, "%2s,%2s,%d,%32[^,],%8s", uf, codUf, &codMunic, nomeMunic, populacao);
+        sscanf(linha, "%2s,%2s,%d,%32[^,],%8s", uf, codUf, &codMunic, nomeMunic, populacao); 
 
         // Cria uma nova cidade com os dados lidos do arquivo
         Cidade* novaCidade = criaCidade(uf, codUf, codMunic, nomeMunic, populacao);
@@ -135,14 +156,21 @@ void lerCidades() {
     }
     fclose(file);
 
+    printf("\nLeitura e inserção de cidades concluídas.\n\n");
+
     // Ordena o array de cidades usando a função qsort e a função de comparação
     qsort(cidadeArray, count, sizeof(Cidade*), compare);
 
-//    // Imprime as cidades ordenadas
     int i;
+    printf("\nCidades ordenadas:\n");
     for (i = 0; i < count; i++) {
         printf("Codigo: %d, Estado: %s, Municipio: %s\n", cidadeArray[i]->codMunic, cidadeArray[i]->uf, cidadeArray[i]->nomeMunic);
     }
+    
+	// Chamar as funções de acesso de dados
+   	dadosTabelaDispersa(hashTable, 72202);
+    dadosBuscaBinaria(cidadeArray, count, 6873);
+    
 
     // Libera a memória alocada para as cidades e o array de cidades
     for (i = 0; i < count; i++) {
@@ -157,16 +185,16 @@ void lerCidades() {
 /*
 void imprimeCidades(CidadeHashTable *hashTable) { // Para imprimir as cidades com todos os dados
     int i;
-    for (i = 0; i < TAM_HASH_TABLE; i++) {
+    for (i = 0; i < TAMANHO_TABELA_HASH; i++) {
         CidadeNo *atual = hashTable->tabela[i];
         while (atual != NULL) {
             Cidade *cidade = atual->cidade;
             printf("UF: %s\n", cidade->uf);
             printf("Codigo UF: %s\n", cidade->codUf);
-            printf("Codigo Municipio: %s\n", cidade->codMunic);
+            printf("Codigo Municipio: %d\n", cidade->codMunic);
             printf("Nome Municipio: %s\n", cidade->nomeMunic);
             printf("Populacao: %s\n", cidade->populacao);
-            printf("----------------------\n");
+            printf("\n");
             atual = atual->prox;
         }
     }

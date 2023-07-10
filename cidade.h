@@ -29,10 +29,10 @@ typedef struct CidadeHashTable {
 
 // Definicoes das funcoes
 CidadeHashTable* criaHashTable();
-unsigned int calculaHash(const char* chave);
+unsigned int calculaHash(int codMunic);
 void insereCidade(CidadeHashTable* hashTable, Cidade* cidade);
 Cidade* criaCidade(const char* uf, const char* codUf, int codMunic, const char* nomeMunic, const char* populacao);
+void dadosTabelaDispersa(CidadeHashTable* hashTable, int codMunic);
 int compare(const void* a, const void* b);
+void dadosBuscaBinaria(Cidade** cidadeArray, int count, int codMunic);
 void lerCidades();
-//void imprimeColisoes(CidadeHashTable *hashTable, unsigned int index);
-
