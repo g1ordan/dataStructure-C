@@ -2,7 +2,6 @@
 
 #define TAMANHO_TABELA_HASH 10000
 #define TAMANHO_MAX_STRING 256
-#define TAMANHO_MAX_CIDADES 6000
 
 
 // Função para criar uma nova tabela hash
@@ -109,7 +108,7 @@ void buscaBinaria(int buscaCodigo, Cidade** cidadeArray, int count) {
     Cidade** resultado = bsearch(&cidadeProcurada, cidadeArray, count, sizeof(Cidade*), compare);
 
     if (resultado != NULL) {
-        printf("Dados encontrados através da busca binária:\n");
+        printf("\nDados encontrados através da busca binária:\n");
         printf("Cod. Município: %d, Município: %s, Estado: %s\n\n", (*resultado)->codMunic, (*resultado)->nomeMunic, (*resultado)->uf);
     } else {
         printf("Dados não encontrados.\n");
@@ -143,11 +142,11 @@ void buscaBinariaPorTodosDados(Cidade** cidadeArray, int count) {
         }
 
         if (resultado != NULL) {
-            printf("Dados encontrados para o Código do Município %d:\n", codMunicBusca);
+            printf("Dados encontrados para Código do Município %d:\n", codMunicBusca);
             printf("Nome do Município: %s\n", resultado->nomeMunic);
             printf("Número de acessos necessários: %d\n\n", numAcessos);
         } else {
-            printf("Dados não encontrados para o Código do Município %d.\n\n", codMunicBusca);
+            printf("Não foram encontrados dados para o codMunic %d.\n\n", codMunicBusca);
         }
     }
 }
@@ -194,9 +193,9 @@ void lerCidades(CidadeHashTable* hashTable, Cidade** cidadeArray, int* countPtr)
 
 void chamaMenu() {
     printf("\nSelecione uma opção:\n");
-    printf("1 - Buscar dados na tabela dispersa\n");
-    printf("2 - Buscar dados na busca binária\n");
-    printf("3 - Buscar dados na busca binária por todos\n");
+    printf("1 - Buscar dados na tabela dispersa.\n");
+    printf("2 - Buscar dados através da busca binária.\n");
+    printf("3 - Buscar dados através da busca binária percorrendo todas cidades.\n");
     printf("0 - Sair\n");
     printf("Opção: ");
 }

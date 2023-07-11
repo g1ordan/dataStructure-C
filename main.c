@@ -3,8 +3,6 @@
 #include <locale.h>
 #include "cidade.h"
 
-void chamaMenu();
-
 int main(int argc, char *argv[]) {
 	
 	setlocale(LC_ALL, "Portuguese");
@@ -20,7 +18,7 @@ int main(int argc, char *argv[]) {
         free(hashTable);
         return 1;
     }
-
+	
     lerCidades(hashTable, cidadeArray, &count);
 
     int cod, opcao;
@@ -44,7 +42,7 @@ int main(int argc, char *argv[]) {
                 buscaBinariaPorTodosDados(cidadeArray, count);
                 break;
 			case 0:
-                printf("Encerrando o programa...\n");
+                printf("Finalizado.\n");
                 break;
 			default:
                 printf("Opção inválida.\n");

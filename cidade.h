@@ -4,7 +4,6 @@
 
 #define TAMANHO_TABELA_HASH 10000
 #define TAMANHO_MAX_STRING 256
-#define TAMANHO_MAX_CIDADES 6000
 
 // Struct Cidade 
 typedef struct dadosCidade
@@ -27,7 +26,6 @@ typedef struct CidadeHashTable {
     CidadeNo* tabela[TAMANHO_TABELA_HASH];
 } CidadeHashTable;
 
-
 // Definicoes das funcoes
 CidadeHashTable* criaHashTable();
 unsigned int calculaHash(int codMunic);
@@ -38,4 +36,5 @@ int compare(const void* a, const void* b);
 void buscaBinaria(int buscaCodigo, Cidade** cidadeArray, int count);
 void buscaBinariaPorTodosDados(Cidade** cidadeArray, int count);
 void lerCidades(CidadeHashTable* hashTable, Cidade** cidadeArray, int* countPtr);
+void chamaMenu();
 //void imprimeCidades(CidadeHashTable *hashTable);
