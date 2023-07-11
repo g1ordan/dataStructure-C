@@ -2,6 +2,7 @@
 
 #define TAMANHO_TABELA_HASH 10000
 #define TAMANHO_MAX_STRING 256
+#define TAMANHO_MAX_CIDADES 6000
 
 
 // Função para criar uma nova tabela hash
@@ -88,46 +89,76 @@ void dadosTabelaDispersa(CidadeHashTable* hashTable, int codMunic) {
     printf("Falha ao acessar os dados.\n");
 }
 
-//Função de comparação para o qsort, usado para ordenar as cidades
-/*Os parâmetros const void* a e const void* b são ponteiros genéricos (void*) para os elementos a serem comparados.
- Eles são declarados como "const" para indicar que o conteúdo apontado por eles não será modificado pela função de comparação*/
+/*Função de comparação para o qsort e bsearch.
+Os parâmetros const void* a e const void* b são ponteiros genéricos (void*) para os elementos a serem comparados.
+Eles são declarados como "const" para indicar que o conteúdo apontado por eles não será modificado pela função de comparação*/
 int compare(const void* a, const void* b) {
-    const Cidade* cidadeA = (*(const Cidade**)a);
-    const Cidade* cidadeB = (*(const Cidade**)b);
+    const Cidade* cidadeA = *(const Cidade**)a;
+    const Cidade* cidadeB = *(const Cidade**)b;
     return cidadeA->codMunic - cidadeB->codMunic;
 }
 
-void dadosBuscaBinaria(Cidade** cidadeArray, int count, int codMunic) {
-    int inicio = 0;
-    int fim = count - 1;
-
-    while (inicio <= fim) {
-        int meio = inicio + (fim - inicio) / 2;
-        int valorMeio = cidadeArray[meio]->codMunic;
-
-        if (valorMeio == codMunic) {
-            printf("Dados encontrados através da busca binária:\n");
-            printf("Cod. Município: %d, Município: %s, Estado: %s\n\n", cidadeArray[meio]->codMunic, cidadeArray[meio]->nomeMunic, cidadeArray[meio]->uf);
-            return;
-        } else if (valorMeio < codMunic) {
-            inicio = meio + 1;
-        } else {
-            fim = meio - 1;
-        }
+void buscaBinaria(int buscaCodigo, Cidade** cidadeArray, int count) {
+    Cidade* cidadeProcurada = malloc(sizeof(Cidade));
+    if (cidadeProcurada == NULL) {
+        printf("Erro na alocação de memória.\n");
+        return;
     }
-	printf("Falha ao acessar os dados.\n");
+    cidadeProcurada->codMunic = buscaCodigo;
+
+    Cidade** resultado = bsearch(&cidadeProcurada, cidadeArray, count, sizeof(Cidade*), compare);
+
+    if (resultado != NULL) {
+        printf("Dados encontrados através da busca binária:\n");
+        printf("Cod. Município: %d, Município: %s, Estado: %s\n\n", (*resultado)->codMunic, (*resultado)->nomeMunic, (*resultado)->uf);
+    } else {
+        printf("Dados não encontrados.\n");
+    }
+
+    free(cidadeProcurada);
 }
 
-void lerCidades() {
+void buscaBinariaPorTodosDados(Cidade** cidadeArray, int count) {
+    int i;
+    for (i = 0; i < count; i++) {
+        int numAcessos = 0; // Inicializa o contador para cada busca
+
+        int codMunicBusca = cidadeArray[i]->codMunic;
+        int esquerda = 0;
+        int direita = count - 1;
+        Cidade* resultado = NULL;
+
+        while (esquerda <= direita) {
+            int meio = (esquerda + direita) / 2;
+            numAcessos++; // Incrementa o contador a cada acesso ao elemento
+
+            if (cidadeArray[meio]->codMunic == codMunicBusca) {
+                resultado = cidadeArray[meio];
+                break; // Elemento encontrado, interrompe o loop
+            } else if (cidadeArray[meio]->codMunic < codMunicBusca) {
+                esquerda = meio + 1; // Atualiza a posição da esquerda
+            } else {
+                direita = meio - 1; // Atualiza a posição da direita
+            }
+        }
+
+        if (resultado != NULL) {
+            printf("Dados encontrados para o Código do Município %d:\n", codMunicBusca);
+            printf("Nome do Município: %s\n", resultado->nomeMunic);
+            printf("Número de acessos necessários: %d\n\n", numAcessos);
+        } else {
+            printf("Dados não encontrados para o Código do Município %d.\n\n", codMunicBusca);
+        }
+    }
+}
+
+void lerCidades(CidadeHashTable* hashTable, Cidade** cidadeArray, int* countPtr) {
     FILE* file = fopen("cidadesUTF-8.csv", "r");
     if (file == NULL) {
         printf("Falha ao abrir o arquivo!\n");
         return;
     }
-    // Cria uma nova tabela hash para armazenar as cidades
-    CidadeHashTable* hashTable = criaHashTable();
-    // Cria um array para armazenar as cidades e seus índices
-    Cidade** cidadeArray = NULL;
+
     int count = 0;
 
     char linha[TAMANHO_MAX_STRING];
@@ -138,30 +169,17 @@ void lerCidades() {
         int codMunic;
         sscanf(linha, "%2s,%2s,%d,%32[^,],%8s", uf, codUf, &codMunic, nomeMunic, populacao); 
 
-        // Cria uma nova cidade com os dados lidos do arquivo
         Cidade* novaCidade = criaCidade(uf, codUf, codMunic, nomeMunic, populacao);
         if (novaCidade != NULL) {
-            // Insere a cidade na tabela hash
             insereCidade(hashTable, novaCidade);
-
-            // Realoca o array de cidades para acomodar a nova cidade
-            cidadeArray = (Cidade**)realloc(cidadeArray, (count + 1) * sizeof(Cidade*));
-            if (cidadeArray != NULL) {
-                // Adiciona a nova cidade ao array
-                cidadeArray[count] = novaCidade;
-                count++;
-            } else {
-                // Em caso de falha na realocação do array, libera a memória da nova cidade e interrompe o loop
-                free(novaCidade);
-                break;
-            }
+            cidadeArray[count] = novaCidade;
+            count++;
         }
     }
     fclose(file);
 
     printf("\nLeitura e inserção de cidades concluídas.\n\n");
 
-    // Ordena o array de cidades usando a função qsort e a função de comparação
     qsort(cidadeArray, count, sizeof(Cidade*), compare);
 
     int i;
@@ -169,19 +187,18 @@ void lerCidades() {
     for (i = 0; i < count; i++) {
         printf("Codigo: %d, Estado: %s, Municipio: %s\n", cidadeArray[i]->codMunic, cidadeArray[i]->uf, cidadeArray[i]->nomeMunic);
     }
-    
-	// Chamar as funções de acesso de dados
-   	dadosTabelaDispersa(hashTable, 72202);
-    dadosBuscaBinaria(cidadeArray, count, 6873);
-    
 
-    // Libera a memória alocada para as cidades e o array de cidades
-    for (i = 0; i < count; i++) {
-        free(cidadeArray[i]);
-    }
-    free(cidadeArray);
-    // Libera a memória alocada para a tabela hash
-    free(hashTable);
+    *countPtr = count;
+}
+
+
+void chamaMenu() {
+    printf("\nSelecione uma opção:\n");
+    printf("1 - Buscar dados na tabela dispersa\n");
+    printf("2 - Buscar dados na busca binária\n");
+    printf("3 - Buscar dados na busca binária por todos\n");
+    printf("0 - Sair\n");
+    printf("Opção: ");
 }
 
 /*
