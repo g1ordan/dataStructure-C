@@ -3,6 +3,7 @@
 #include <locale.h>
 #include "cidade.h"
 
+
 int main(int argc, char *argv[]) {
 	
 	setlocale(LC_ALL, "Portuguese");
@@ -28,21 +29,23 @@ int main(int argc, char *argv[]) {
 
         switch (opcao) {
             case 1:
-                printf("Digite o codMunic para realizar a busca: ");
+                printf("\nDigite o codMunic para realizar a busca: ");
                 scanf("%d", &cod);
                 dadosTabelaDispersa(hashTable, cod);
                 break;
 			case 2:
-                printf("Digite o codMunic para realizar a busca: ");
+                printf("\nDigite o codMunic para realizar a busca: ");
                 scanf("%d", &cod);
                 buscaBinaria(cod, cidadeArray, count);
                 break;
 			case 3:
-                printf("Buscando todos os dados e contando acessos: \n");
                 buscaBinariaPorTodosDados(cidadeArray, count);
                 break;
+            case 4:
+                todosDadosTabelaDispersa(hashTable);
+                break;
 			case 0:
-                printf("Finalizado.\n");
+                printf("\nPrograma Finalizado.\n");
                 break;
 			default:
                 printf("Opção inválida.\n");
