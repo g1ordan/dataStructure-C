@@ -11,7 +11,6 @@ int main(int argc, char *argv[]) {
 
     int count; // Número de cidades lidas
 
-    // Aloca o array de cidades com o tamanho apropriado
     Cidade** cidadeArray = (Cidade**)malloc(TAMANHO_MAX_CIDADES * sizeof(Cidade*));
     if (cidadeArray == NULL) {
         printf("Falha ao alocar memória para o array de cidades.\n");
@@ -21,8 +20,8 @@ int main(int argc, char *argv[]) {
     }
 	
     lerCidades(hashTable, cidadeArray, &count);
-
-    int cod, opcao;
+    
+    int cod, cod2, opcao;
     do {
         chamaMenu();
         scanf("%d", &opcao);
@@ -31,7 +30,9 @@ int main(int argc, char *argv[]) {
             case 1:
                 printf("\nDigite o codMunic para realizar a busca: ");
                 scanf("%d", &cod);
-                dadosTabelaDispersa(hashTable, cod);
+                printf("Digite o codUf para realizar a busca: ");
+				scanf("%d", &cod2);
+                dadosTabelaDispersa(hashTable, cod, cod2);
                 break;
 			case 2:
                 printf("\nDigite o codMunic para realizar a busca: ");
