@@ -4,17 +4,18 @@
 #include "cidade.h"
 
 
+/*Sor, nas propriedade do console/terminal, na aba layout tu altera a LARGURA do tamanho do buffer de tela, seta 9999 pra facilitar a visualização, já que são muitos dados printados*/
 int main(int argc, char *argv[]) {
-	
+				
 	setlocale(LC_ALL, "Portuguese");
 	CidadeHashTable* hashTable = criaHashTable();
 
-    int count; // Número de cidades lidas
+    int count; //Número de cidades lidas
 
     Cidade** cidadeArray = (Cidade**)malloc(TAMANHO_MAX_CIDADES * sizeof(Cidade*));
     if (cidadeArray == NULL) {
         printf("Falha ao alocar memória para o array de cidades.\n");
-        // Libera a memória alocada para a tabela hash
+        //Libera a memória alocada para a tabela hash
         free(hashTable);
         return 1;
     }
@@ -54,14 +55,14 @@ int main(int argc, char *argv[]) {
         }
     }while(opcao != 0);
 
-    // Libera a memória alocada para as cidades e o array de cidades
+    //Libera a memória alocada para as cidades e o array de cidades
     int i;
     for (i = 0; i < count; i++) {
         free(cidadeArray[i]);
     }
     free(cidadeArray);
 
-    // Libera a memória alocada para a tabela hash
+    
     free(hashTable);
 
     return 0;

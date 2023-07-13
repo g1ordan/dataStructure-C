@@ -13,7 +13,7 @@ CidadeHashTable* criaHashTable() {
     }
     return hashTable;
 }
-
+//Sor, defini o tamanho da hash em 5581, que é o primeiro primo depois do último dado e aqui na função deixei o ultimo primo antes do término dos dados, pareceu funcionar bem.
 int calculaHash(int codMunic) {
     int numPrimo = 5573;
     return codMunic % numPrimo;
@@ -77,23 +77,30 @@ void dadosTabelaDispersa(CidadeHashTable* hashTable, int codMunic, int codUf) {
     printf("\nFalha ao acessar os dados.\n");
 }
 
+/*Vai notar que no município Jari, de i == 5557, por exemplo, tem 5 acessos, sendo ele mesmo e os 4 de cima da lista. 
+Esse comportamento se repete em outros índices da hash.
+[Só assim que consegui implementar, bastante dificuldade pra entender esse comportamento]*/
 void todosDadosTabelaDispersa(CidadeHashTable* hashTable) {
     int totalAcessos = 0;
-	int i;
-    for (i = 0; i < TAMANHO_TABELA_HASH; i++){
+    int i;
+    for (i = 0; i < TAMANHO_TABELA_HASH; i++) {
         CidadeNo* atual = hashTable->tabela[i];
-        while(atual != NULL){
-            printf("Código: %d, Município: %s\n", atual->cidade->codMunic, atual->cidade->nomeMunic);
+        int numAcessos = 0;
+        while (atual != NULL) {
+            printf("\nCódigo: %d, Município: %s / ", atual->cidade->codMunic, atual->cidade->nomeMunic);
+            numAcessos++;
             totalAcessos++;
             atual = atual->prox;
         }
+        if(numAcessos > 0)
+        printf("Número de acessos para o índice %d: %d", i, numAcessos);
     }
-	printf("\nTotal de acessos: %d\n\n", totalAcessos);
+    printf("\n\nTotal de acessos: %d\n\n", totalAcessos);
 }
 
 /*Função de comparação para o qsort e bsearch.
 Os parâmetros const void* a e const void* b são ponteiros genéricos (void*) para os elementos a serem comparados.
-Eles são declarados como "const" para indicar que o conteúdo apontado por eles não será modificado pela função de comparação*/
+Eles são declarados como "const" para garantir que o conteudo não será modificado pela função de comparação*/
 int compare(const void* a, const void* b) {
     const Cidade* cidadeA = *(const Cidade**)a;
     const Cidade* cidadeB = *(const Cidade**)b;
@@ -120,6 +127,7 @@ void buscaBinaria(int buscaCodigo, Cidade** cidadeArray, int count) {
 }
 
 void buscaBinariaPorTodosDados(Cidade** cidadeArray, int count) {
+	int totalAcessos = 0;
     int i;
     for (i = 0; i < count; i++) {
         int numAcessos = 0;
@@ -131,27 +139,29 @@ void buscaBinariaPorTodosDados(Cidade** cidadeArray, int count) {
 
         while (esquerda <= direita) {
             int meio = (esquerda + direita) / 2;
-            numAcessos++; // Incrementa o contador a cada acesso ao elemento
+            numAcessos++; //Incrementa o contador a cada acesso ao elemento
 
             if (cidadeArray[meio]->codMunic == codMunicBusca) {
                 resultado = cidadeArray[meio];
-                break; // Elemento encontrado, interrompe o loop
+                break; //Elemento encontrado, interrompe o loop
             } else if (cidadeArray[meio]->codMunic < codMunicBusca) {
-                esquerda = meio + 1; // Atualiza a posição da esquerda
+                esquerda = meio + 1; //Att posicao da esq.
             } else {
-                direita = meio - 1; // Atualiza a posição da direita
+                direita = meio - 1; //Att posicao da dir.
             }
         }
-
-        if (resultado != NULL) {
-            printf("Cod. do Município: %d - ", codMunicBusca);
+		if (resultado != NULL) {
+            printf("Cod. do Município: %d / ", codMunicBusca);
             printf("Nome do Município: %s ----> ", resultado->nomeMunic);
             printf("Número de acessos necessários: %d\n", numAcessos);
         } else {
             printf("Não foram encontrados dados para o codMunic %d.\n\n", codMunicBusca);
         }
+        totalAcessos += numAcessos;
     } 
+     	printf("\nTotal de acessos: %d\n", totalAcessos);
 }
+
 
 void lerCidades(CidadeHashTable* hashTable, Cidade** cidadeArray, int* countPtr) {
     FILE* file = fopen("cidadesUTF-8.csv", "r");
@@ -193,24 +203,25 @@ void lerCidades(CidadeHashTable* hashTable, Cidade** cidadeArray, int* countPtr)
     *countPtr = count;
 }
 
+//inseri um codUf para cada inserção (43, 42, 1, 51) para podermos encontrar na tabela dispersa já que todos tem o mesmo codMunic :)
 void novosRegistros(CidadeHashTable* hashTable, Cidade** cidadeArray, int* countPtr) {
   
-    Cidade* novaCidade = criaCidade("RS", 01, 6001, "Albatroz", "5.000");
+    Cidade* novaCidade = criaCidade("RS", 43, 6001, "Albatroz", "5.000");
     insereCidade(hashTable, novaCidade);
     cidadeArray[*countPtr] = novaCidade;
     (*countPtr)++;//incrementa +1 registrto no cidadeArray
 
-    novaCidade = criaCidade("SC", 02, 6001, "Borussia", "4.000");
+    novaCidade = criaCidade("SC", 42, 6001, "Borussia", "4.000");
+    insereCidade(hashTable, novaCidade);
+    cidadeArray[*countPtr] = novaCidade;
+    (*countPtr)++;
+	//alterei para o codUf 1, pra não dar conflito.
+    novaCidade = criaCidade("PR", 1, 6001, "Palmital", "3.000");
     insereCidade(hashTable, novaCidade);
     cidadeArray[*countPtr] = novaCidade;
     (*countPtr)++;
 
-    novaCidade = criaCidade("PR", 03, 6001, "Palmital", "3.000");
-    insereCidade(hashTable, novaCidade);
-    cidadeArray[*countPtr] = novaCidade;
-    (*countPtr)++;
-
-    novaCidade = criaCidade("MT", 04, 6001, "Laranjeiras", "2.000");
+    novaCidade = criaCidade("MT", 51, 6001, "Laranjeiras", "2.000");
     insereCidade(hashTable, novaCidade);
     cidadeArray[*countPtr] = novaCidade;
     (*countPtr)++;
@@ -220,7 +231,7 @@ void chamaMenu() {
     printf("\nSelecione uma opção:\n\n");
     printf("1 - Buscar dados na tabela dispersa.\n");
     printf("2 - Buscar dados através da busca binária.\n");
-    printf("3 - Buscar dados através da busca binária percorrendo todas cidades.\n");
+    printf("3 - Buscar todos dados através da busca binária.\n");
     printf("4 - Buscar todos os dados na tabela dispersa.\n");
     printf("0 - Sair\n\n");
     printf("Opção: ");

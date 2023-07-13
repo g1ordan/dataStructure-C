@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define TAMANHO_TABELA_HASH 11000
+#define TAMANHO_TABELA_HASH 5581
 #define TAMANHO_MAX_STRING 256
 #define TAMANHO_MAX_CIDADES 6000
 
